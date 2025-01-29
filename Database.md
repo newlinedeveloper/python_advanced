@@ -265,5 +265,155 @@ A **high-scale notification service** that processes **millions of events** per 
 - **MySQL** → Best for traditional structured applications with transactional needs.  
 - **PostgreSQL** → Best for advanced analytics and complex queries with JSON support.  
 - **MongoDB** → Best for flexible schema & real-time applications with unstructured data.  
-- **DynamoDB** → Best for highly scalable, serverless, low-latency applications.  
+- **DynamoDB** → Best for highly scalable, serverless, low-latency applications.
+- 
+### **Implementing Full-Text Search in PostgreSQL** 🚀
 
+PostgreSQL provides **built-in full-text search capabilities** using `tsvector` and `tsquery`. Full-text search is useful for searching large text-based datasets efficiently.
+
+---
+
+## **1. Basic Concepts**
+### 🔹 `tsvector`
+- Converts text into a search-friendly format (normalized & tokenized).
+- Stores words in a sorted, indexed structure.
+
+### 🔹 `tsquery`
+- Used for searching inside `tsvector` data.
+
+### 🔹 `to_tsvector(text)`
+- Converts a text column into a `tsvector`.
+
+### 🔹 `to_tsquery(query)`
+- Converts a search string into a `tsquery`.
+
+### 🔹 `@@`
+- Match operator to compare `tsvector` with `tsquery`.
+
+---
+
+## **2. Basic Example**
+```sql
+SELECT to_tsvector('english', 'PostgreSQL has full text search') @@ to_tsquery('full & text');
+```
+✅ **Returns `true`** because both "full" and "text" exist in the document.
+
+---
+
+## **3. Implementing Full-Text Search in a Table**
+### **Step 1: Create a Sample Table**
+```sql
+CREATE TABLE articles (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    search_vector tsvector
+);
+```
+
+---
+
+### **Step 2: Populate Data**
+```sql
+INSERT INTO articles (title, content)
+VALUES 
+('PostgreSQL Full Text Search', 'Learn how to implement full text search in PostgreSQL'),
+('Introduction to Databases', 'This article explains relational databases and NoSQL'),
+('Full Text Search Optimization', 'Techniques to optimize text search performance');
+```
+
+---
+
+### **Step 3: Create a `tsvector` Column**
+```sql
+UPDATE articles 
+SET search_vector = to_tsvector(title || ' ' || content);
+```
+
+---
+
+### **Step 4: Perform Search**
+```sql
+SELECT * FROM articles WHERE search_vector @@ to_tsquery('text & search');
+```
+✅ **Finds rows where both "text" and "search" exist.**
+
+---
+
+## **4. Optimizing with Indexing**
+### **Create a GIN Index for Fast Search**
+```sql
+CREATE INDEX idx_articles_search ON articles USING GIN(search_vector);
+```
+**Why?**  
+🔹 `GIN` (Generalized Inverted Index) speeds up full-text search significantly.  
+🔹 Queries become **much faster** with large datasets.
+
+---
+
+## **5. Ranking Search Results**
+### **Use `ts_rank()` to Rank Results**
+```sql
+SELECT id, title, ts_rank(search_vector, to_tsquery('text & search')) AS rank
+FROM articles
+WHERE search_vector @@ to_tsquery('text & search')
+ORDER BY rank DESC;
+```
+✅ Higher-ranked results appear first.
+
+---
+
+## **6. Using `plainto_tsquery()` for User-Friendly Search**
+Instead of manually adding `&` operators:
+```sql
+SELECT * FROM articles WHERE search_vector @@ plainto_tsquery('full text search');
+```
+✅ Automatically converts user input into a `tsquery`.
+
+---
+
+## **7. Dynamic Updates with Triggers**
+Instead of manually updating `search_vector`, use a **trigger**:
+```sql
+CREATE FUNCTION update_search_vector() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_vector = to_tsvector(NEW.title || ' ' || NEW.content);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_articles_search
+BEFORE INSERT OR UPDATE ON articles
+FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+```
+✅ Keeps `search_vector` updated on every insert/update.
+
+---
+
+## **8. Using Full-Text Search with Django & PostgreSQL**
+If you're using **Django with PostgreSQL**, use `SearchVector`:
+```python
+from django.contrib.postgres.search import SearchVector
+from myapp.models import Article
+
+# Full-Text Search Query
+Article.objects.annotate(search=SearchVector('title', 'content')).filter(search='text search')
+```
+✅ **Built-in Django support** for full-text search.
+
+---
+
+## **9. When to Use PostgreSQL Full-Text Search?**
+✅ You need **fast search within structured text data**.  
+✅ You want **advanced ranking & indexing** for better performance.  
+✅ You prefer **built-in support** instead of using external search engines like Elasticsearch.  
+
+---
+
+### **🔥 Final Thoughts**
+- PostgreSQL **full-text search** is **powerful, scalable, and built-in**.
+- Use **GIN indexes** for better performance.
+- Use **triggers** to keep search vectors updated.
+- Use `ts_rank()` for **ranking search results**.
+
+----
