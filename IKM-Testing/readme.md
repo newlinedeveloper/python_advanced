@@ -1,5 +1,3 @@
----
-
 ### 🧠 **Understanding the IKM Python 3 Assessment**
 
 * **Format**: The assessment typically comprises multiple-choice questions, some of which may have multiple correct answers.
