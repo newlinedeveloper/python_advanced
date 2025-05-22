@@ -222,3 +222,77 @@ Would you like to:
 * Secure endpoints with token authentication?
 
 Let me know how you'd like to proceed!
+
+Thanks for sharing the error log. The root of your error is clear from this line:
+
+django.template.exceptions.TemplateDoesNotExist: rest\_framework/api.html
+
+This means:
+
+👉 Django REST Framework is trying to render a browsable HTML API (when you access /api/vehicles/ in a browser), but it cannot find the default template rest\_framework/api.html.
+
+✅ Solution: You need to include the DRF templates directory in your Django settings.
+
+Fix it in three simple steps:
+
+1. Add 'rest\_framework' to INSTALLED\_APPS (if not already):
+
+In vehicle\_platform/settings.py:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+]
+```
+
+2. Add Django templates directory for DRF:
+
+Also in vehicle\_platform/settings.py:
+
+```python
+import os
+
+TEMPLATES = [
+    {
+        ...
+        'DIRS': [],
+        'APP_DIRS': True,
+        ...
+    },
+]
+```
+
+3. Make sure Django knows where to find the static templates:
+
+At the bottom of settings.py, add (if not present):
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+}
+```
+
+Optional: If you don't need the browsable HTML interface (e.g. you're only using tools like Postman or React frontend), you can disable it:
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
+```
+
+Then restart the development server:
+
+```bash
+python manage.py runserver
+```
+
+Now visit [http://127.0.0.1:8000/api/vehicles/](http://127.0.0.1:8000/api/vehicles/) again — it should return a JSON list or an empty array \[] if no data yet.
+
+Let me know if you want to load test data or connect your frontend next!
+
