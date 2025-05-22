@@ -43,4 +43,103 @@ Led the development of a fullstack platform for configuring, integrating, simula
 * Improved cross-team collaboration by centralizing vehicle knowledge and test history
 * Reduced physical test rig dependency by enabling virtual testing environments
 
-Let me know if you'd like this added to your resume under the Projects section or integrated into your professional experience. I can also tailor the phrasing to emphasize either backend, frontend, or cloud skills.
+------
+
+🚧 High-Level Design (HLD)
+
+🔹 1. Database Design (Entities and Relationships)
+
+Here are the primary entities and their relationships:
+
+Entity: Vehicle
+
+* id (PK)
+* name (e.g., "EV-Concept-X")
+* model\_year (e.g., 2025)
+* variant (e.g., "Luxury" or "Sport")
+
+Entity: Component
+
+* id (PK)
+* vehicle\_id (FK → Vehicle.id)
+* name (e.g., “Battery Management System”)
+* type (e.g., ECU, Sensor, Controller)
+
+Entity: Configuration
+
+* id (PK)
+* component\_id (FK → Component.id)
+* key (e.g., “CAN ID”)
+* value (e.g., “0x101”)
+
+Entity: Simulation
+
+* id (PK)
+* vehicle\_id (FK → Vehicle.id)
+* status (Pending, Running, Success, Failed)
+* created\_at
+* updated\_at
+
+Entity: User (optional for access control)
+
+* id (PK)
+* username
+* role (Engineer, Admin, Viewer)
+* password\_hash
+
+Optional Entities for future expansion:
+
+* TestCase: Linked to Simulation
+* ResultLog: Linked to TestCase
+
+ER Diagram (simplified):
+
+Vehicle
+└───▶ Component
+└───▶ Configuration
+
+Vehicle
+└───▶ Simulation
+
+---
+
+🔹 2. API Design (REST Endpoints using Django + DRF)
+
+🟢 Vehicle Endpoints:
+
+* GET /api/vehicles/ → List all vehicles
+* POST /api/vehicles/ → Create new vehicle
+* GET /api/vehicles/{id}/ → Get vehicle details
+* PUT /api/vehicles/{id}/ → Update vehicle
+* DELETE /api/vehicles/{id}/ → Delete vehicle
+
+🟢 Component Endpoints:
+
+* GET /api/components/?vehicle={vehicle\_id} → List components for a vehicle
+* POST /api/components/ → Create a new component
+* PUT /api/components/{id}/ → Update a component
+* DELETE /api/components/{id}/ → Delete a component
+
+🟢 Configuration Endpoints:
+
+* GET /api/configurations/?component={component\_id}
+* POST /api/configurations/
+* PUT /api/configurations/{id}/
+* DELETE /api/configurations/{id}/
+
+🟢 Simulation Endpoints:
+
+* POST /api/simulations/ → Trigger a simulation for a vehicle
+* GET /api/simulations/?vehicle={vehicle\_id} → View simulations for a vehicle
+* GET /api/simulations/{id}/ → Get simulation status
+* PATCH /api/simulations/{id}/status → Update simulation status (if handled manually or externally)
+
+🟢 Optional: Authentication
+
+* POST /api/auth/login
+* GET /api/auth/profile
+
+---
+
+
+
